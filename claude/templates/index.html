@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}Home — PPML Lab{% endblock %}
+{% block content %}
+<section class="hero">
+  <h1>Privacy-preserving ML dashboard</h1>
+  <p class="lead">
+    Compare <strong>standard ML</strong> (logistic regression + random forest baselines)
+    against <strong>DPML</strong> in three places: <em>noisy inputs</em> (pre-processing),
+    <em>noisy gradients</em> during training (DP-SGD / Opacus), and <em>noisy predictions</em> (post-processing).
+  </p>
+</section>
+
+<section class="card explainer">
+  <h2>What the UI shows after a run</h2>
+  <ul class="prose list-plain">
+    <li><span class="stage-badge">BASELINE</span> — clean data, no DP (utility reference).</li>
+    <li><span class="stage-badge">PRE</span> — Laplace vs Gaussian noise on <strong>features</strong> before training LR.</li>
+    <li><span class="stage-badge">DP-SGD</span> — Gaussian mechanism in <strong>optimizer</strong> (ε, δ budget via Opacus).</li>
+    <li><span class="stage-badge">POST</span> — Laplace vs Gaussian noise on <strong>probabilities</strong> from LR or RF.</li>
+  </ul>
+  <p class="prose">
+    Default privacy sweep: ε ∈ {% for e in epsilons %}<span class="pill">{{ e }}</span>{% endfor %},
+    δ = <code>{{ delta_fmt }}</code>. See the <a href="{{ url_for('results') }}#epsilon-guide">results page</a> for why ε matters.
+  </p>
+</section>
+
+<section class="card">
+  <h2>Run experiment</h2>
+  <p>Training takes <strong>about one minute</strong> on CPU (all ε values and models).</p>
+  <form action="{{ url_for('run_experiment_route') }}" method="post" class="run-form">
+    <button type="submit" class="btn primary">Run full pipeline</button>
+  </form>
+  {% if has_results %}
+    <p class="hint"><a href="{{ url_for('results') }}">View structured results →</a></p>
+  {% endif %}
+</section>
+
+<section class="card muted">
+  <h2>CLI</h2>
+  <pre><code>python3 claude/main.py</code></pre>
+  <pre><code>python -m claude.app</code></pre>
+</section>
+{% endblock %}
