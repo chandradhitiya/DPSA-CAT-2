@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+{% block title %}Results — Healthcare PPML{% endblock %}
+{% block content %}
+<nav class="toc">
+  <span class="toc-label">Jump to:</span>
+  <a href="#setup">Setup</a>
+  <a href="#epsilon-guide">ε &amp; δ</a>
+  {% for s in sections %}<a href="#{{ s.id }}">{{ s.tag }}</a>{% endfor %}
+  <a href="#plots">Plots</a>
+  <a href="#full-table">Full table</a>
+</nav>
+
+<h1>Healthcare experiment results</h1>
+<p class="meta">{{ n_rows }} model runs · favorable outcome prediction · grouped by stage and noise mode.</p>
+
+<section id="setup" class="card">
+  <h2>Experiment setup</h2>
+  <p class="prose">
+    This run sweeps privacy budget <strong>ε (epsilon)</strong> over:
+    {% for e in epsilons %}<span class="pill">{{ e }}</span>{% endfor %}
+    with <strong>δ (delta)</strong> = <code>{{ delta_fmt }}</code> (used with Gaussian mechanisms / Opacus).
+    Random seed: <code>{{ meta.get('random_state', 42) }}</code>.
+  </p>
+</section>
+
+<section id="epsilon-guide" class="card explainer">
+  <h2>What is ε, and why these values?</h2>
+  <p class="prose">{{ epsilon_why }}</p>
+  {% if per_epsilon and per_epsilon|length > 0 %}
+  <h3 class="h3-inline">Per-ε best accuracy (among DP runs)</h3>
+  <div class="table-scroll">
+    <table class="metrics-table">
+      <thead>
+        <tr>
+          <th>ε</th>
+          <th>Best method</th>
+          <th>Stage</th>
+          <th>Accuracy</th>
+          <th>F1</th>
+          <th>Runs at ε</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in per_epsilon %}
+        <tr>
+          <td>{{ row.epsilon }}</td>
+          <td>{{ row.best_method }}</td>
+          <td>{{ row.best_stage }}</td>
+          <td>{{ '%.4f'|format(row.best_accuracy) }}</td>
+          <td>{{ '%.4f'|format(row.best_f1) }}</td>
+          <td>{{ row.n_runs }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
+</section>
+
+{% if best is not none %}
+<section class="card highlight">
+  <h2>Best single run (by test accuracy)</h2>
+  <dl class="kv">
+    <dt>Method</dt><dd>{{ best.get('method', '—') }}</dd>
+    <dt>Stage</dt><dd>{{ best.get('stage', '—') }}</dd>
+    <dt>ε (target)</dt><dd>{% if best['epsilon'] == best['epsilon'] %}{{ '%.4g'|format(best['epsilon']) }}{% else %}— (baseline){% endif %}</dd>
+    <dt>Accounted ε</dt><dd>{% if best['accounted_epsilon'] == best['accounted_epsilon'] %}{{ '%.4g'|format(best['accounted_epsilon']) }}{% else %}—{% endif %}</dd>
+    <dt>Accuracy</dt><dd>{{ '%.4f'|format(best.get('accuracy', 0)) }}</dd>
+    <dt>Balanced acc.</dt><dd>{{ '%.4f'|format(best.get('balanced_accuracy', 0)) }}</dd>
+    <dt>F1</dt><dd>{{ '%.4f'|format(best.get('f1', 0)) }}</dd>
+    <dt>MCC</dt><dd>{{ '%.4f'|format(best.get('mcc', 0)) }}</dd>
+    <dt>AUC-ROC</dt><dd>{{ '%.4f'|format(best.get('auc_roc', 0)) }}</dd>
+    <dt>PR AUC</dt><dd>{{ '%.4f'|format(best.get('avg_precision', 0)) }}</dd>
+    <dt>Specificity</dt><dd>{{ '%.4f'|format(best.get('specificity', 0)) }}</dd>
+    <dt>Log loss</dt><dd>{{ '%.4f'|format(best.get('log_loss', 0)) }}</dd>
+  </dl>
+</section>
+{% endif %}
+
+{% for s in sections %}
+<section id="{{ s.id }}" class="card section-card">
+  <header class="section-head">
+    <span class="stage-badge">{{ s.tag }}</span>
+    <h2>{{ s.title }}</h2>
+  </header>
+  <p class="prose">{{ s.intro | safe }}</p>
+  {% if s.noise %}
+  <div class="noise-callout">
+    <strong>Noise / mechanism:</strong> {{ s.noise | safe }}
+  </div>
+  {% endif %}
+  {% for b in s.blocks %}
+    {% if b.subtitle %}
+    <h3 class="subsection-title">{{ b.subtitle }}</h3>
+    {% endif %}
+    <div class="table-scroll">{{ b.html | safe }}</div>
+  {% endfor %}
+</section>
+{% endfor %}
+
+{% if plot_urls %}
+<section id="plots" class="card">
+  <h2>Plots (privacy vs utility)</h2>
+  <p class="prose muted">
+    Curves show DP stages across ε; dashed lines are standard ML baselines. The bar chart compares baselines to mean DP-SGD utility across the sweep.
+  </p>
+  <div class="plots">
+    {% for url in plot_urls %}
+      <figure>
+        <img src="{{ url }}" alt="Result plot" loading="lazy">
+      </figure>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+<section id="full-table" class="card">
+  <h2>Full metrics table (all runs)</h2>
+  <p class="prose muted">Same data as <code>metrics_all_runs.csv</code> — scroll horizontally on small screens.</p>
+  <div class="table-scroll">{{ full_table_html | safe }}</div>
+</section>
+
+<p class="back-row"><a href="{{ url_for('index') }}">← Back home</a></p>
+{% endblock %}

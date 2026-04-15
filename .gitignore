@@ -12,6 +12,11 @@ env/
 *.zip
 *.tar.gz
 
+# Generated experiment outputs (regenerate with scripts)
+dp_results/
+dp_results_ppml/
+dp_results_healthcare/
+
 # Jupyter
 .ipynb_checkpoints/
 

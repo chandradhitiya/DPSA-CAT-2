@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Home — Healthcare PPML{% endblock %}
+{% block content %}
+<section class="hero">
+  <h1>Healthcare privacy-preserving ML</h1>
+  <p class="lead">
+    Dataset: <code>healthcare_treatments__csv.csv</code> — binary target
+    <strong>favorable treatment outcome</strong> (successful / discharged / stable / partially successful)
+    vs other statuses. Same pipeline as the bank project:
+    <strong>baselines</strong>, <strong>pre-processing DP</strong>, <strong>DP-SGD (Opacus)</strong>,
+    and <strong>post-processing DP</strong>.
+  </p>
+</section>
+
+<section class="card explainer">
+  <h2>What the UI shows after a run</h2>
+  <ul class="prose list-plain">
+    <li><span class="stage-badge">BASELINE</span> — clean engineered features, no DP.</li>
+    <li><span class="stage-badge">PRE</span> — Laplace vs Gaussian noise on <strong>features</strong> before LR.</li>
+    <li><span class="stage-badge">DP-SGD</span> — Gaussian noise on clipped gradients (Opacus).</li>
+    <li><span class="stage-badge">POST</span> — Laplace vs Gaussian noise on <strong>probabilities</strong> (LR or RF).</li>
+  </ul>
+  <p class="prose">
+    Default ε sweep: {% for e in epsilons %}<span class="pill">{{ e }}</span>{% endfor %},
+    δ = <code>{{ delta_fmt }}</code>. Large CSV is <strong>stratified-subsampled</strong> (see <code>HEALTHCARE_MAX_ROWS</code>).
+    Results → <code>dp_results_healthcare/</code>.
+  </p>
+</section>
+
+<section class="card">
+  <h2>Run experiment</h2>
+  <p>First run may take <strong>several minutes</strong> on CPU. For a quick test: <code>HEALTHCARE_MAX_ROWS=15000</code>.</p>
+  <form action="{{ url_for('run_experiment_route') }}" method="post" class="run-form">
+    <button type="submit" class="btn primary">Run full pipeline</button>
+  </form>
+  {% if has_results %}
+    <p class="hint"><a href="{{ url_for('results') }}">View structured results →</a></p>
+  {% endif %}
+</section>
+
+<section class="card muted">
+  <h2>CLI</h2>
+  <pre><code>cd /path/to/DPSA-CAT-2 && python3 claud-health/main.py</code></pre>
+  <pre><code>cd claud-health && python3 app.py</code></pre>
+</section>
+{% endblock %}
