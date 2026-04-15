@@ -1,0 +1,19 @@
+# Python
+__pycache__/
+*.pyc
+
+# Virtual environment
+dpsa_venv/
+venv/
+env/
+
+# Data files
+*.csv
+*.zip
+*.tar.gz
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Mac
+.DS_Store
